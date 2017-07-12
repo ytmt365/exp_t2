@@ -7,23 +7,27 @@ fsft = flen / 4;
 mu = 0.15;
 gamma = 0.3;
 wnd = 1; % hamming
-ns = 2; % number of sources
+itr = 600;
 
 % read wavs, set fs
-[x1, fss] = audioread('./data/output2_1_1_conv.wav');
-x2 = audioread('./data/output2_1_2_conv.wav');
+% [x1, fss] = audioread('./data/output2_1_1_conv.wav');
+% x2 = audioread('./data/output2_1_2_conv.wav');
+[x1, fss] = audioread('./src/rec3_1_1.wav');
+x2 = audioread('./src/rec3_1_2.wav');
+x3 = audioread('./src/rec3_1_3.wav');
 
 % STFT
 xf(:, :, 1) = stft(x1, flen, fsft, wnd);
 xf(:, :, 2) = stft(x2, flen, fsft, wnd);
+xf(:, :, 3) = stft(x3, flen, fsft, wnd);
 
-% set frame size (number of frequency bin)
-fnum = size(xf, 2);
+fnum = size(xf, 2); % set frame size (number of frequency bin)
 fp = flen / 2 + 1;
+ns = size(xf, 3); % number of sources
 
 %% Initialize W (bad effect point)
 % xp: (channel * number of flame * flame length)
-xp = permute(xf, [3, 2, 1]);
+xfp = permute(xf, [3, 2, 1]);
 % wf = zeros(ns, ns, fp);
 % v = zeros(ns, ns, fp);
 % for f = 1: fp
@@ -35,44 +39,48 @@ rng(101, 'twister');
 wf = rand(ns, ns, fp) + rand(ns, ns, fp) * 1i;
 
 %% IVA
-y = zeros(size(xp, 1), size(xp, 2), fp);
-fprintf('    IVA Iteration:    \n');
-for itr = 1: 200
-    fprintf('\b\b\b\b%3d\n', itr);
+yf = zeros(size(xfp, 1), size(xfp, 2), fp);
+fprintf('\tIVA Iteration:          \n');
+tic;
+for i = 1: itr
+    fprintf('\b\b\b\b\b\b\b\b\b\b%3d / %3d\n', i, itr);
     % (55)
     for f = 1: fp
-        y(:, :, f) = wf(:, :, f) * xp(:, :, f);
+        yf(:, :, f) = wf(:, :, f) * xfp(:, :, f);
     end
     % (58)
-    l2 = sqrt(sum(abs(y) .^ 2, 3));
+    l2 = sqrt(sum(abs(yf) .^ 2, 3));
+    % regularization
     l2(l2 == 0) = eps('double');
     % (57)
-    psi = gamma * y ./ repmat(l2, [1, 1, fp]);
+    psi = gamma * yf ./ repmat(l2, [1, 1, fp]);
+    % (56)
     for f = 1: fp
-        % (56)
         wf(:, :, f) = wf(:, :, f) + mu * (eye(ns) - ...
-            psi(:, :, f) * y(:, :, f)' / fnum) * wf(:, :, f);
+            psi(:, :, f) * yf(:, :, f)' / fnum) * wf(:, :, f);
     end
 end
 
 for f = 1: fp
-    y(:, :, f) = wf(:, :, f) * xp(:, :, f);
+    yf(:, :, f) = wf(:, :, f) * xfp(:, :, f);
 end
+fprintf('\t\tElapsed Time: %3.2f [s]\n', toc);
 
 %% Projection Back
-z = zeros(ns, ns, fnum, fp);
+z = zeros(fp, fnum, ns * ns);
+fprintf('\tProjection Back ... ');
 for f = 1: fp
     for m = 1: fnum
-        z(:, :, m, f) = wf(:, :, f) \ diag(y(:, m, f));
+        z(f, m, :) = reshape(transpose(wf(:, :, f) ...
+            \ diag(yf(:, m, f))), [1, 1, ns * ns]);
     end
 end
-z11 = squeeze(z(1, 1, :, :)).';
-z12 = squeeze(z(1, 2, :, :)).';
-z21 = squeeze(z(2, 1, :, :)).';
-z22 = squeeze(z(2, 2, :, :)).';
+fprintf('Done\n');
 
-z11 = vertcat(z11, conj(flipud(z11(2: end - 1, :))));
-z22 = vertcat(z22, conj(flipud(z22(2: end - 1, :))));
-
-s1 = istft(z11, length(x1), flen, fsft, 1);
-s2 = istft(z22, length(x2), flen, fsft, 1);
+%% ISTFT, Obtain Sources
+s_out = zeros(length(x1), ns);
+for n = 1: ns
+    s_out(:, n) = istft(vertcat(z(:, :, 1 + (ns + 1) * (n - 1)), ...
+        conj(flipud(z(2: end - 1, :, 1 + (ns + 1) * (n - 1))))), ...
+        length(x1), flen, fsft, wnd);
+end
