@@ -7,11 +7,9 @@ fsft = flen / 4;
 mu = 0.15;
 gamma = 0.3;
 wnd = 1; % hamming
-itr = 600;
+itr = 300;
 
 % read wavs, set fs
-% [x1, fss] = audioread('./data/output2_1_1_conv.wav');
-% x2 = audioread('./data/output2_1_2_conv.wav');
 [x1, fss] = audioread('./src/rec3_1_1.wav');
 x2 = audioread('./src/rec3_1_2.wav');
 x3 = audioread('./src/rec3_1_3.wav');
@@ -26,17 +24,15 @@ fp = flen / 2 + 1;
 ns = size(xf, 3); % number of sources
 
 %% Initialize W (bad effect point)
-% xp: (channel * number of flame * flame length)
+% xfp: (channel * number of flame * flame length)
 xfp = permute(xf, [3, 2, 1]);
-% wf = zeros(ns, ns, fp);
-% v = zeros(ns, ns, fp);
-% for f = 1: fp
-%     v(:, :, f) = xp(:, :, f) * xp(:, :, f).' / fnum;
-%     [d, u] = eig(v(:, :, f));
-%     wf(:, :, f) = 1 ./ sqrt(d) * u';
-% end
-rng(101, 'twister');
-wf = rand(ns, ns, fp) + rand(ns, ns, fp) * 1i;
+wf = zeros(ns, ns, fp);
+v = zeros(ns, ns, fp);
+for f = 1: fp
+    v(:, :, f) = xfp(:, :, f) * xfp(:, :, f).' / fnum;
+    [u, d] = eig(v(:, :, f));
+    wf(:, :, f) = diag(diag(d) .^ (-1 / 2)) * u';
+end
 
 %% IVA
 yf = zeros(size(xfp, 1), size(xfp, 2), fp);
