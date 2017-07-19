@@ -27,8 +27,8 @@ is2m2 = resample(is2m2, fss, fsi);
 flen = 2 ^ nextpow2(length(is1m1));
 
 % STFT
-[X1, count] = stft(x1, flen, flen / 2, 1);
-[X2, ~] = stft(x2, flen, flen / 2, 1);
+X1 = stft(x1, flen, flen / 2, 1);
+X2 = stft(x2, flen, flen / 2, 1);
 
 % initialize matrices
 H = zeros(2, 2, flen);
@@ -42,14 +42,14 @@ H(2, 1, :) = fft(is2m1, flen);
 H(2, 2, :) = fft(is2m2, flen);
 
 % source separation (37)
-for k = 1: size(X1, 2)
-    for l = 1: size(X1, 1)
-        ts = H(:, :, l).' \ [X1(l, k); X2(l, k)];
-        S1(l, k) = ts(1);
-        S2(l, k) = ts(2);
+for i2 = 1: size(X1, 2)
+    for i1 = 1: size(X1, 1)
+        ts = H(:, :, i1).' \ [X1(i1, i2); X2(i1, i2)];
+        S1(i1, i2) = ts(1);
+        S2(i1, i2) = ts(2);
     end
 end
 
 % ISTFT, obtain sources
-s1 = istft(S1, length(x1), flen, flen / 2, 1, count);
-s2 = istft(S2, length(x2), flen, flen / 2, 1, count);
+s1 = istft(S1, length(x1), flen, flen / 2, 1);
+s2 = istft(S2, length(x2), flen, flen / 2, 1);

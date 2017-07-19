@@ -53,8 +53,8 @@ H(2, 2, :) = fft(is2m2, dftp);
 %     + squeeze(H(2, 2, :)).' .* S(2, :);
 
 % convolution
-for i = 1: dftp
-    C(:, i) = H(:, :, i).' * S(:, i);
+for id = 1: dftp
+    C(:, id) = H(:, :, id).' * S(:, id);
 end
 
 % ISTFT, obtain signals
@@ -62,5 +62,5 @@ c1 = real(ifft(C(1, :), dftp)).';
 c2 = real(ifft(C(2, :), dftp)).';
 
 % write signals
-audiowrite('./data/output2_1_1.wav', c1, fss);
-audiowrite('./data/output2_1_2.wav', c2, fss);
+% audiowrite('./data/output2_1_1.wav', c1, fss);
+% audiowrite('./data/output2_1_2.wav', c2, fss);

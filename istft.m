@@ -13,9 +13,9 @@ if size(f, 1) ~= flen
 end
 fnum = size(f, 2);
 src = zeros((fnum - 1) * fsft + flen, 1);
-for i = 1: fnum
-    tmpsig = real(ifft(f(:, i), flen)) .* wnd;
-    src((i - 1) * fsft + 1: (i - 1) * fsft + flen) = ...
-        src((i - 1) * fsft + 1: (i - 1) * fsft + flen) + tmpsig;
+for id = 1: fnum
+    tmpsig = real(ifft(f(:, id), flen)) .* wnd;
+    src((id - 1) * fsft + 1: (id - 1) * fsft + flen) = ...
+        src((id - 1) * fsft + 1: (id - 1) * fsft + flen) + tmpsig;
 end
 src = src(flen - fsft + 1: slen + flen - fsft);

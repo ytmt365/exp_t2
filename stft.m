@@ -17,7 +17,7 @@ fnum = ceil((length(src) - flen) / fsft) + 1;
 src = [src; zeros((fnum - 1) * fsft + flen - length(src), 1)];
 f = zeros(flen, fnum);
 
-for i = 1: fnum
-    tmpsig = src((i - 1) * fsft + 1: (i - 1) * fsft + flen) .* wnd;
-    f(:, i) = fft(tmpsig, flen);
+for id = 1: fnum
+    tmpsig = src((id - 1) * fsft + 1: (id - 1) * fsft + flen) .* wnd;
+    f(:, id) = fft(tmpsig, flen);
 end

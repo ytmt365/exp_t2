@@ -5,25 +5,25 @@ clear;
 flen = 4096;
 fsft = flen / 4;
 mu = 0.15;
-gamma = 0.3;
+p_gamma = 0.3;
 wnd = 1; % hamming
-itr = 300;
+itr = 140;
 
 % read wavs, set fs
-[x1, fss] = audioread('./src/rec3_1_1.wav');
-x2 = audioread('./src/rec3_1_2.wav');
-x3 = audioread('./src/rec3_1_3.wav');
+[x1, fss] = audioread('./src/rec2_1_1.wav');
+x2 = audioread('./src/rec2_1_2.wav');
+% x3 = audioread('./src/rec3_1_3.wav');
 
 % STFT
 xf(:, :, 1) = stft(x1, flen, fsft, wnd);
 xf(:, :, 2) = stft(x2, flen, fsft, wnd);
-xf(:, :, 3) = stft(x3, flen, fsft, wnd);
+% xf(:, :, 3) = stft(x3, flen, fsft, wnd);
 
 fnum = size(xf, 2); % set frame size (number of frequency bin)
 fp = flen / 2 + 1;
 ns = size(xf, 3); % number of sources
 
-%% Initialize W (bad effect point)
+%% Initialize W
 % xfp: (channel * number of flame * flame length)
 xfp = permute(xf, [3, 2, 1]);
 wf = zeros(ns, ns, fp);
@@ -36,10 +36,18 @@ end
 
 %% IVA
 yf = zeros(size(xfp, 1), size(xfp, 2), fp);
-fprintf('\tIVA Iteration:          \n');
+% display iteration number
+fprintf(strcat('\tIVA Iteration:  %', num2str(length(num2str(itr))), ...
+    'd / %', num2str(length(num2str(itr))), 'd'), 0, itr);
+z = '\b\b\b\b';
+for id = 1: length(num2str(itr))
+    z = strcat(z, '\b\b');
+end
+z = strcat(z, '%', num2str(length(num2str(itr))), 'd / %', ...
+    num2str(length(num2str(itr))), 'd\n');
 tic;
-for i = 1: itr
-    fprintf('\b\b\b\b\b\b\b\b\b\b%3d / %3d\n', i, itr);
+for id = 1: itr
+    fprintf(z, id, itr);
     % (55)
     for f = 1: fp
         yf(:, :, f) = wf(:, :, f) * xfp(:, :, f);
@@ -49,18 +57,18 @@ for i = 1: itr
     % regularization
     l2(l2 == 0) = eps('double');
     % (57)
-    psi = gamma * yf ./ repmat(l2, [1, 1, fp]);
+    p_psi = p_gamma * yf ./ repmat(l2, [1, 1, fp]);
     % (56)
     for f = 1: fp
         wf(:, :, f) = wf(:, :, f) + mu * (eye(ns) - ...
-            psi(:, :, f) * yf(:, :, f)' / fnum) * wf(:, :, f);
+            p_psi(:, :, f) * yf(:, :, f)' / fnum) * wf(:, :, f);
     end
 end
 
 for f = 1: fp
     yf(:, :, f) = wf(:, :, f) * xfp(:, :, f);
 end
-fprintf('\t\tElapsed Time: %3.2f [s]\n', toc);
+fprintf('\t\tElapsed Time: %.2f [s]\n', toc);
 
 %% Projection Back
 z = zeros(fp, fnum, ns * ns);

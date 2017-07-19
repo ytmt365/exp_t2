@@ -40,8 +40,8 @@ H(2, 1, :) = fft(is2m1, dftp);
 H(2, 2, :) = fft(is2m2, dftp);
 
 % source separation (24)
-for i = 1: dftp
-    S(:, i) = H(:, :, i).' \ C(:, i);
+for id = 1: dftp
+    S(:, id) = H(:, :, id).' \ C(:, id);
 end
 
 % ISTFT, obtain sources
