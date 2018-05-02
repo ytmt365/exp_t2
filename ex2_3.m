@@ -5,9 +5,9 @@ clear;
 flen = 4096;
 fsft = flen / 4;
 mu = 0.15;
-p_gamma = 0.3;
+Gamma = 0.3;
 wnd = 1; % hamming
-itr = 140;
+itr = 15;
 
 % read wavs, set fs
 [x1, fss] = audioread('./src/rec2_1_1.wav');
@@ -36,18 +36,12 @@ end
 
 %% IVA
 yf = zeros(size(xfp, 1), size(xfp, 2), fp);
-% display iteration number
-fprintf(strcat('\tIVA Iteration:  %', num2str(length(num2str(itr))), ...
-    'd / %', num2str(length(num2str(itr))), 'd'), 0, itr);
-z = '\b\b\b\b';
-for id = 1: length(num2str(itr))
-    z = strcat(z, '\b\b');
-end
-z = strcat(z, '%', num2str(length(num2str(itr))), 'd / %', ...
-    num2str(length(num2str(itr))), 'd\n');
 tic;
+str2 = '';
 for id = 1: itr
-    fprintf(z, id, itr);
+    str1 = sprintf('\tIVA iteration: %d / %d\n', id, itr);
+    fprintf([repmat('\b', [1, length(str2)]), '%s'], str1);
+    str2 = str1;
     % (55)
     for f = 1: fp
         yf(:, :, f) = wf(:, :, f) * xfp(:, :, f);
@@ -57,11 +51,11 @@ for id = 1: itr
     % regularization
     l2(l2 == 0) = eps('double');
     % (57)
-    p_psi = p_gamma * yf ./ repmat(l2, [1, 1, fp]);
+    Psi = Gamma * yf ./ repmat(l2, [1, 1, fp]);
     % (56)
     for f = 1: fp
         wf(:, :, f) = wf(:, :, f) + mu * (eye(ns) - ...
-            p_psi(:, :, f) * yf(:, :, f)' / fnum) * wf(:, :, f);
+            Psi(:, :, f) * yf(:, :, f)' / fnum) * wf(:, :, f);
     end
 end
 

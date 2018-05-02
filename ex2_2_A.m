@@ -25,6 +25,7 @@ is2m2 = resample(is2m2, fss, fsi);
 
 % set DFT point
 dftp = 2 ^ nextpow2(length(c1) + length(is1m1) - 1);
+fprintf('\tDFT point: %d\n', dftp);
 
 % initialize matrices
 C = zeros(2, dftp);
@@ -40,7 +41,13 @@ H(2, 1, :) = fft(is2m1, dftp);
 H(2, 2, :) = fft(is2m2, dftp);
 
 % source separation (24)
+str2 = '';
 for id = 1: dftp
+    if (mod(id, round(dftp / 100)) == 0 || id == dftp)
+        str1 = sprintf('\tprogress: %d%%\n', ceil(id / dftp * 100));
+        fprintf([repmat('\b', [1, length(str2)]), '%s'], str1);
+        str2 = str1;
+    end
     S(:, id) = H(:, :, id).' \ C(:, id);
 end
 
