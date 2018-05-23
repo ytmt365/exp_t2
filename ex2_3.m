@@ -6,7 +6,7 @@ flen = 4096;
 fsft = flen / 4;
 mu = 0.15;
 Gamma = 0.3;
-wnd = 1; % hamming
+wnd = 'hamming';
 itr = 15;
 
 % read wavs, set fs
@@ -80,5 +80,5 @@ s_out = zeros(length(x1), ns);
 for n = 1: ns
     s_out(:, n) = istft(vertcat(z(:, :, 1 + (ns + 1) * (n - 1)), ...
         conj(flipud(z(2: end - 1, :, 1 + (ns + 1) * (n - 1))))), ...
-        length(x1), flen, fsft, wnd);
+        flen, fsft, wnd, size(s_out, 1));
 end

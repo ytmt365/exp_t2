@@ -7,10 +7,10 @@ s2 = audioread('./data/sample2.wav');
 
 % make signals the same length
 ldiff = length(s2) - length(s1);
-if ldiff < 0
-    s2 = [s2; zeros(-1 * ldiff, 1)];
-elseif ldiff > 0
-    s1 = [s1; zeros(ldiff, 1)];
+if ldiff > 0
+    s2 = s2(1: length(s1));
+else
+    s1 = s1(1: length(s2));
 end
 
 % read impulse responses
@@ -47,11 +47,6 @@ H(1, 2, :) = fft(is1m2, dftp);
 H(2, 1, :) = fft(is2m1, dftp);
 H(2, 2, :) = fft(is2m2, dftp);
 
-% C(1, :) = squeeze(H(1, 1, :)).' .* S(1, :) ...
-%     + squeeze(H(2, 1, :)).' .* S(2, :);
-% C(2, :) = squeeze(H(1, 2, :)).' .* S(1, :) ...
-%     + squeeze(H(2, 2, :)).' .* S(2, :);
-
 % convolution
 for id = 1: dftp
     C(:, id) = H(:, :, id).' * S(:, id);
@@ -62,5 +57,5 @@ c1 = real(ifft(C(1, :), dftp)).';
 c2 = real(ifft(C(2, :), dftp)).';
 
 % write signals
-% audiowrite('./data/output2_1_1.wav', c1, fss);
-% audiowrite('./data/output2_1_2.wav', c2, fss);
+audiowrite('./data/output2_1_1.wav', c1, fss);
+audiowrite('./data/output2_1_2.wav', c2, fss);

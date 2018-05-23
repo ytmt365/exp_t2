@@ -1,21 +1,25 @@
-function src = istft(f, slen, flen, fsft, wi)
+function y = istft(XF, flen, fsft, wi, slen)
 switch wi
-    case 1
+    case 'hamming'
         wnd = hamming(flen);
-    case 2
+    case 'hann'
         wnd = hann(flen);
     otherwise
-        error('Valid input is 1 (hamming) or 2 (hann).\n')
+        error('Valid input is ''hamming'' or ''hann''.')
 end
 % check row vector
-if size(f, 1) ~= flen
+if size(XF, 1) ~= flen
     error('Illigal input.\n');
 end
-fnum = size(f, 2);
-src = zeros((fnum - 1) * fsft + flen, 1);
+fnum = size(XF, 2);
+y = zeros((fnum - 1) * fsft + flen, 1);
 for id = 1: fnum
-    tmpsig = real(ifft(f(:, id), flen)) .* wnd;
-    src((id - 1) * fsft + 1: (id - 1) * fsft + flen) = ...
-        src((id - 1) * fsft + 1: (id - 1) * fsft + flen) + tmpsig;
+    tmpsig = real(ifft(XF(:, id), flen)) .* wnd;
+    y((id - 1) * fsft + 1: (id - 1) * fsft + flen) = ...
+        y((id - 1) * fsft + 1: (id - 1) * fsft + flen) + tmpsig;
 end
-src = src(flen - fsft + 1: slen + flen - fsft);
+if nargin == 5
+    y = y(flen - fsft + 1: slen + flen - fsft);
+else
+    y = y(flen - fsft + 1: end);
+end

@@ -2,8 +2,8 @@ clear;
 
 % read wavs, set fs
 fsi = 48000;
-[x1, fss] = audioread('./data/output2_1_1_conv.wav');
-x2 = audioread('./data/output2_1_2_conv.wav');
+[x1, fss] = audioread('./data/output2_1_1.wav');
+x2 = audioread('./data/output2_1_2.wav');
 
 % read impulse responses
 fid = fopen('./data/IR_S1toM1.dbl', 'rb');
@@ -27,8 +27,8 @@ is2m2 = resample(is2m2, fss, fsi);
 flen = 2 ^ nextpow2(length(is1m1));
 
 % STFT
-X1 = stft(x1, flen, flen / 2, 1);
-X2 = stft(x2, flen, flen / 2, 1);
+X1 = stft(x1, flen, flen / 2, 'hamming');
+X2 = stft(x2, flen, flen / 2, 'hamming');
 
 % initialize matrices
 H = zeros(2, 2, flen);
@@ -51,5 +51,5 @@ for i2 = 1: size(X1, 2)
 end
 
 % ISTFT, obtain sources
-s1 = istft(S1, length(x1), flen, flen / 2, 1);
-s2 = istft(S2, length(x2), flen, flen / 2, 1);
+s1 = istft(S1, flen, flen / 2, 1);
+s2 = istft(S2, flen, flen / 2, 1);

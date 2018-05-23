@@ -1,23 +1,23 @@
-function f = stft(src, flen, fsft, wi)
+function YF = stft(x, flen, fsft, wi)
 switch wi
-    case 1
+    case 'hamming'
         wnd = hamming(flen);
-    case 2
+    case 'hann'
         wnd = hann(flen);
     otherwise
-        error('Valid input is 1 (hamming) or 2 (hann).\n')
+        error('Valid input is ''hamming'' or ''hann''.')
 end
 % check row vector
-if size(src, 1) < size(src, 2)
+if size(x, 1) < size(x, 2)
     error('Illigal input.\n');
 end
 % pad zeros
-src = [zeros(flen - fsft, 1); src; zeros(flen - fsft, 1)];
-fnum = ceil((length(src) - flen) / fsft) + 1;
-src = [src; zeros((fnum - 1) * fsft + flen - length(src), 1)];
-f = zeros(flen, fnum);
+x = [zeros(flen - fsft, 1); x; zeros(flen - fsft, 1)];
+fnum = ceil((length(x) - flen) / fsft) + 1;
+x = [x; zeros((fnum - 1) * fsft + flen - length(x), 1)];
+YF = zeros(flen, fnum);
 
 for id = 1: fnum
-    tmpsig = src((id - 1) * fsft + 1: (id - 1) * fsft + flen) .* wnd;
-    f(:, id) = fft(tmpsig, flen);
+    tmpsig = x((id - 1) * fsft + 1: (id - 1) * fsft + flen) .* wnd;
+    YF(:, id) = fft(tmpsig, flen);
 end
